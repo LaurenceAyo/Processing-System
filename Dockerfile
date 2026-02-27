@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
-RUN install-php-extensions gd zip
+RUN install-php-extensions gd zip pdo_mysql
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -30,14 +30,27 @@ RUN npm ci
 # Build assets
 RUN npm run build
 
-# Setup Laravel caches
-RUN php artisan config:cache && \
-    php artisan event:cache && \
+# Create storage directories and set permissions
+RUN mkdir -p storage/framework/{sessions,views,cache} \
+    && mkdir -p storage/logs \
+    && mkdir -p bootstrap/cache \
+    && chown -R www-data:www-data storage bootstrap/cache \
+    && chmod -R 775 storage bootstrap/cache
+
+# Setup Laravel caches (without config:cache to avoid env issues)
+RUN php artisan event:cache && \
     php artisan route:cache && \
     php artisan view:cache
 
 # Expose port 8080
 EXPOSE 8080
 
-# Start the application on port 8080
-CMD php artisan serve --host=0.0.0.0 --port=8080
+# Create a startup script
+RUN echo '#!/bin/sh' > /start.sh && \
+    echo 'php artisan config:clear' >> /start.sh && \
+    echo 'php artisan cache:clear' >> /start.sh && \
+    echo 'php artisan serve --host=0.0.0.0 --port=8080' >> /start.sh && \
+    chmod +x /start.sh
+
+# Start the application
+CMD ["/start.sh"]
