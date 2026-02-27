@@ -24,11 +24,20 @@ WORKDIR /app
 # Install composer dependencies
 RUN composer install --optimize-autoloader --no-scripts --no-interaction
 
+# Install npm dependencies
+RUN npm ci
+
 # Build assets
-RUN npm install && npm run build
+RUN npm run build
 
 # Setup Laravel caches
 RUN php artisan config:cache && \
     php artisan event:cache && \
     php artisan route:cache && \
     php artisan view:cache
+
+# Expose port 8080
+EXPOSE 8080
+
+# Start the application on port 8080
+CMD php artisan serve --host=0.0.0.0 --port=8080
