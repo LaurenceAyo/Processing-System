@@ -1,10 +1,13 @@
 FROM dunglas/frankenphp:php8.2
 
-# Install system dependencies
+# Install system dependencies including Node.js
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
     zip \
+    curl \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
@@ -21,7 +24,7 @@ WORKDIR /app
 # Install composer dependencies
 RUN composer install --optimize-autoloader --no-scripts --no-interaction
 
-# Build assets (if you have frontend assets)
+# Build assets
 RUN npm install && npm run build
 
 # Setup Laravel caches
