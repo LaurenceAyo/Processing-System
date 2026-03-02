@@ -43,14 +43,15 @@ RUN php artisan event:cache && \
     php artisan view:cache
 
 # Expose port 8080
-EXPOSE 8080
+EXPOSE ${PORT:-8080}
 
 # Create a startup script
 RUN echo '#!/bin/sh' > /start.sh && \
     echo 'php artisan config:clear' >> /start.sh && \
     echo 'php artisan cache:clear' >> /start.sh && \
-    echo 'php artisan serve --host=0.0.0.0 --port=8080' >> /start.sh && \
+    echo 'php artisan migrate --force' >> /start.sh && \
+    echo "php artisan serve --host=0.0.0.0 --port=\${PORT:-8080}" >> /start.sh && \
     chmod +x /start.sh
 
 # Start the application
-CMD ["sh", "-c", "php artisan config:clear && php artisan cache:clear && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8080"]
+CMD sh -c "php artisan config:clear && php artisan cache:clear && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"
