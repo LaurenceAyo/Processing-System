@@ -53,4 +53,4 @@ RUN echo '#!/bin/sh' > /start.sh && \
     chmod +x /start.sh
 
 # Start the application
-CMD ["/start.sh"]
+CMD ["sh", "-c", "php artisan config:clear && php artisan cache:clear && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8080"]
